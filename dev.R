@@ -74,7 +74,7 @@ project_all <- function(data, vec){
 }
 
 project <- function(point, vec){
-  (point %*% vec) / norm_vec(vec)
+  (point %*% vec) / vec
 }
 
 
@@ -95,9 +95,11 @@ norm_vec <- function(x) sqrt(sum(x^2))
 
 evaluate_depth <- function(data, halfspaces){
   
-  halfmasses <- NULL
+  halfmasses <- rep(NA, nrow(data))
+  # apply
   for (i in 1:nrow(data)) {
     this_halfmass <- 0
+    # lapply
     for (j in 1:length(halfspaces)) {
       data_projected <- project(data[i,], halfspaces[[j]]$rand_direction)
       split_point <- halfspaces[[j]]$split_point
@@ -108,7 +110,7 @@ evaluate_depth <- function(data, halfspaces){
         this_halfmass <- this_halfmass + halfspaces[[j]]$mass_right
       }
     }
-    halfmasses <- c(halfmasses, this_halfmass)
+    halfmasses[i] <- this_halfmass
     
   }
   
