@@ -1,11 +1,16 @@
 train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = 1){
   
   # Checks
-  checkmate::assert(checkmate::test_matrix(data), checkmate::test_data_frame(data), combine = "or")
+  checkmate::assert(
+    checkmate::test_matrix(data),
+    checkmate::test_data_frame(data), 
+    combine = "or"
+  )
   
   set.seed(seed)
   res_list <- list()
   subsample_size = subsample * nrow(data)
+  data <- as.matrix(data)
   for (i in 1:n_halfspace) {
     rand_direction <- get_rand_direction(data)
     data_sub <- get_subsample(data)
@@ -31,11 +36,6 @@ get_rand_direction <- function(data){
 
 get_subsample <- function(data, subsample_size){
   data[sample(nrow(data), subsample_size), ]
-}
-
-project_all <- function(data, vec){
-  data_projected <- apply(data, 1, project, vec)
-  data_projected
 }
 
 project <- function(point, vec){
