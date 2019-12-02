@@ -60,7 +60,7 @@ train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = 1){
 
 
 get_rand_direction <- function(data){
-  rand_vec <- norm_vec(rnorm(ncol(data)))
+  rand_vec <- rnorm(ncol(data))
   rand_vec
 }
 
@@ -74,7 +74,10 @@ project_all <- function(data, vec){
 }
 
 project <- function(point, vec){
-  (point %*% vec) / vec
+  #print(point)
+  #print(vec)
+  #print((point %*% vec))
+  (vec %*% point) / norm_vec(vec)
 }
 
 
@@ -100,6 +103,7 @@ evaluate_depth <- function(data, halfspaces){
   for (i in 1:nrow(data)) {
     this_halfmass <- 0
     # lapply
+    #apply(halfspaces, 1, evaluate, data[i, ])
     for (j in 1:length(halfspaces)) {
       data_projected <- project(data[i,], halfspaces[[j]]$rand_direction)
       split_point <- halfspaces[[j]]$split_point
@@ -116,6 +120,18 @@ evaluate_depth <- function(data, halfspaces){
   
   halfmasses / length(halfspaces)
   
+}
+
+evaluate <- function(halfspaces, data){
+  data_projected <- project(data[i,], halfspaces$rand_direction)
+  split_point <- halfspaces[[j]]$split_point
+  
+  if (data_projected < split_point) {
+    this_halfmass <- this_halfmass + halfspaces$mass_left
+  } else {
+    this_halfmass <- this_halfmass + halfspaces$mass_right
+  }
+  this_halfmass
 }
 
 
