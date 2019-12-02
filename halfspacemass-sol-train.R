@@ -11,15 +11,16 @@ train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = 1){
   checkmate::assert_number(seed, finite = TRUE)
   
   data <- as.matrix(data)
-  res_list <- list()
+  halfspaces <- list()
   subsample_size = subsample * nrow(data)
   
   set.seed(seed)
   for (i in 1:n_halfspace) {
-    res_list[[i]] <- train(data, subsample_size, scope)
+    halfspaces[[i]] <- train(data, subsample_size, scope)
   }
-  class(res_list) <- "halfspaces"
-  return(res_list)
+  class(halfspaces) <- "halfspaces"
+  attr(halfspaces, "subsample_size") <- subsample_size
+  return(halfspaces)
 }
 
 
@@ -34,7 +35,8 @@ train <- function(data, subsample_size, scope){
     "rand_direction" = rand_direction, 
     "split_point" = split_point,
     "mass_left" = mass_left, 
-    "mass_right" = mass_right)
+    "mass_right" = mass_right,
+    "n_data" = nrow(data_sub))
 }
 
 get_rand_direction <- function(data){
