@@ -1,33 +1,41 @@
 train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = 1){
   
-  # Checks
   checkmate::assert(
     checkmate::test_matrix(data),
     checkmate::test_data_frame(data), 
     combine = "or"
   )
+  checkmate::assert_number(n_halfspace, finite = TRUE)
+  checkmate::assert_number(subsample, lower = 0, upper = 1, finite = TRUE)
+  checkmate::assert_number(scope, finite = TRUE)
+  checkmate::assert_number(seed, finite = TRUE)
   
-  set.seed(seed)
+  data <- as.matrix(data)
   res_list <- list()
   subsample_size = subsample * nrow(data)
-  data <- as.matrix(data)
+  
+  set.seed(seed)
   for (i in 1:n_halfspace) {
-    rand_direction <- get_rand_direction(data)
-    data_sub <- get_subsample(data)
-    data_projected <- project(data_sub, rand_direction)
-    split_point <- select_split_point(data_projected, scope)
-    mass_left <- sum(data_projected < split_point) / nrow(data_sub)
-    mass_right <- sum(data_projected >= split_point) / nrow(data_sub)
-    res_list[[i]] <- list(
-      "rand_direction" = rand_direction, 
-      "split_point" = split_point,
-      "mass_left" = mass_left, 
-      "mass_right" = mass_right)
+    res_list[[i]] <- train(data, subsample_size, scope)
   }
   class(res_list) <- "halfspaces"
   return(res_list)
 }
 
+
+train <- function(data, subsample_size, scope){
+  rand_direction <- get_rand_direction(data)
+  data_sub <- get_subsample(data)
+  data_projected <- project(data_sub, rand_direction)
+  split_point <- select_split_point(data_projected, scope)
+  mass_left <- sum(data_projected < split_point) / nrow(data_sub)
+  mass_right <- sum(data_projected >= split_point) / nrow(data_sub)
+  result <- list(
+    "rand_direction" = rand_direction, 
+    "split_point" = split_point,
+    "mass_left" = mass_left, 
+    "mass_right" = mass_right)
+}
 
 get_rand_direction <- function(data){
   rand_vec <- rnorm(ncol(data))

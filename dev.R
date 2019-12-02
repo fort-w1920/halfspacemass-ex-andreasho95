@@ -54,7 +54,7 @@ train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = 1){
       "mass_left" = mass_left, 
       "mass_right" = mass_right)
   }
-  
+  class(res_list) <- "halfspaces"
   return(res_list)
 }
 
@@ -74,9 +74,6 @@ project_all <- function(data, vec){
 }
 
 project <- function(point, vec){
-  #print(point)
-  #print(vec)
-  #print((point %*% vec))
   (vec %*% point) / norm_vec(vec)
 }
 
@@ -91,49 +88,44 @@ select_split_point <- function(data, scope){
   selected_point
 }
 
+# Euclidean norm
+norm_vec <- function(x) {
+  sqrt(sum(x^2))
+} 
 
-norm_vec <- function(x) sqrt(sum(x^2))
 
-
-
+# Evaluate all halfspaces for a given data set
 evaluate_depth <- function(data, halfspaces){
-  
-  halfmasses <- rep(NA, nrow(data))
-  # apply
-  for (i in 1:nrow(data)) {
-    this_halfmass <- 0
-    # lapply
-    #apply(halfspaces, 1, evaluate, data[i, ])
-    for (j in 1:length(halfspaces)) {
-      data_projected <- project(data[i,], halfspaces[[j]]$rand_direction)
-      split_point <- halfspaces[[j]]$split_point
-
-      if (data_projected < split_point) {
-        this_halfmass <- this_halfmass + halfspaces[[j]]$mass_left
-      } else {
-        this_halfmass <- this_halfmass + halfspaces[[j]]$mass_right
-      }
-    }
-    halfmasses[i] <- this_halfmass
-    
-  }
-  
-  halfmasses / length(halfspaces)
-  
+  checkmate::assert_class(halfspaces, "halfspaces")
+  checkmate::assert(checkmate::test_matrix(data), checkmate::test_data_frame(data), combine = "or")
+  halfspacemasses <- apply(data, 1, evaluate, halfspaces)
+  halfspacemasses / length(halfspacemasses)
 }
 
-evaluate <- function(halfspaces, data){
-  data_projected <- project(data[i,], halfspaces$rand_direction)
-  split_point <- halfspaces[[j]]$split_point
-  
+# Evaluate all halfspaces for a given data row
+evaluate <- function(data, halfspaces){
+  eval_halfspaces <- sapply(halfspaces, evaluate_single, data)
+  sum(eval_halfspaces)
+}
+
+# Evaluate one halfspace for a given data row
+evaluate_single <- function(halfspaces, data){
+  data_projected <- project(data, halfspaces$rand_direction)
+  split_point <- halfspaces$split_point
   if (data_projected < split_point) {
-    this_halfmass <- this_halfmass + halfspaces$mass_left
+    this_halfmass <- halfspaces$mass_left
   } else {
-    this_halfmass <- this_halfmass + halfspaces$mass_right
+    this_halfmass <- halfspaces$mass_right
   }
   this_halfmass
 }
 
-
-evaluate_depth(data, halfspaces)
+set.seed(123456789)
+data <- matrix(runif(300, min = -20, max = 20), ncol = 3)
+halfspaces <- train_depth(data, 500)
+depth_matrix <- evaluate_depth(data, halfspaces)
+data <- data.frame(data)
+halfspaces <- train_depth(data, 500)
+depth_df <- evaluate_depth(data, halfspaces)
+identical(depth_df, depth_matrix)
 
