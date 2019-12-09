@@ -36,3 +36,4 @@ test_that("Same result for data given in data.frame and matrix", {
   depth_df <- evaluate_depth(data, halfspaces)
   expect_equal(depth_df, depth_matrix)
 })
+
